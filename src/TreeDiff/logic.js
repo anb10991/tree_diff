@@ -47,42 +47,56 @@ const convertToString = (obj, depth = 0) => {
     return returnStr;
 }
 
-const isIdentical = (left, right, option) => {
-    const {baseKeys, threshold} = option;
-    
-    // Check if name is identical
-    for (const baseKey of baseKeys) {
-        if (left[baseKey] && right[baseKey] && left[baseKey] === right[baseKey]) {
-            return true;
-        }
-    }
-
-    // Check LevenshteinDistance between name
-    for (const baseKey of baseKeys) {
-        if (left[baseKey] && right[baseKey]) {
-            if (Math.abs(1 - LevenshteinDistance(left[baseKey], right[baseKey]) / left[baseKey].length) > threshold) {
-                return true;
-            }
-        }
-    }
-}
-
 export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: ['id'] }, depth = 0, ll = '', rl = '') => {
-    const { baseKeys, ignoreKeys } = option;
+    const { baseKeys, ignoreKeys, threshold } = option;
     let lt = [], rt = [];
 
     if (Array.isArray(left) && Array.isArray(right)) {
         let lf = [], rf = [];
         for (let lidx = 0; lidx < left.length; lidx++) {
+            let identical = false;
+
+            // Search for exact matching nodes
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
-                if (isIdentical(left[lidx], right[ridx], option)) {
+                for (const baseKey of baseKeys) {
+                    if (left[lidx][baseKey] && right[ridx][baseKey] && left[lidx][baseKey] === right[ridx][baseKey]) {
+                        identical = true;
+                        break;
+                    }
+                }
+                if (identical) {
                     lf[lidx] = true; rf[ridx] = true;
                     const diff = compare(left[lidx], right[ridx], option, depth + 1);
                     lt.push(...diff.left);
                     rt.push(...diff.right);
                     break;
                 }
+            }
+            if (identical) {
+                continue;
+            }
+
+            // Check for renamed nodes using LevenshteinDistance
+            for (let ridx = 0; ridx < right.length; ridx++) {
+                if (rf[ridx]) continue;
+                for (const baseKey of baseKeys) {
+                    if (left[lidx][baseKey] && right[ridx][baseKey] &&
+                        Math.abs(1 - LevenshteinDistance(left[lidx][baseKey], right[ridx][baseKey]) / Math.max(left[lidx][baseKey].length, right[ridx][baseKey].length)) > threshold) {
+                        identical = true;
+                        break;
+                    }
+                }
+                if (identical) {
+                    lf[lidx] = true; rf[ridx] = true;
+                    const diff = compare(left[lidx], right[ridx], option, depth + 1);
+                    lt.push(...diff.left);
+                    rt.push(...diff.right);
+                    break;
+                }
+            }
+            if (identical) {
+                continue;
             }
         }
         for (let lidx = 0; lidx < left.length; lidx++) {
