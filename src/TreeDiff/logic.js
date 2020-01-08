@@ -56,6 +56,15 @@ const isIdentical = (left, right, option) => {
             return true;
         }
     }
+
+    // Check LevenshteinDistance between name
+    for (const baseKey of baseKeys) {
+        if (left[baseKey] && right[baseKey]) {
+            if (Math.abs(1 - LevenshteinDistance(left[baseKey], right[baseKey]) / left[baseKey].length) > threshold) {
+                return true;
+            }
+        }
+    }
 }
 
 export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: ['id'] }, depth = 0, ll = '', rl = '') => {

@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import './App.css'
 
-import { Container, Grid, Box, AppBar, Tabs, Tab, Typography } from '@material-ui/core'
+import { Container, Grid, Box, AppBar, Tabs, Tab, Typography, Paper, TextField } from '@material-ui/core'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import pink from '@material-ui/core/colors/pink'
+import lightBlue from '@material-ui/core/colors/lightBlue'
+import blue from '@material-ui/core/colors/blue'
 
 import TreeDiff from './TreeDiff'
 import ImportFromFileBody from './ImportFromFileBody'
@@ -11,10 +12,8 @@ import { styled } from '@material-ui/styles'
 
 const myTheme = createMuiTheme({
   palette: {
-    primary: {
-      main: '#2dff46',
-    },
-    secondary: pink,
+    primary: blue,
+    secondary: lightBlue,
   }
 });
 
@@ -50,6 +49,7 @@ function App() {
   const [past, setPast] = useState(null)
   const [current, setCurrent] = useState(null)
   const [value, setValue] = useState(0)
+  const [threshold, setThreshold] = useState(0.9)
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -58,19 +58,33 @@ function App() {
   return (
     <MuiThemeProvider theme={myTheme}>
       <Container>
-        <Grid
-          container
-          direction="row"
-          justify="center"
-          alignItems="center"
-        >
-          <ImportFromFileBody
-            label="Select left file to compare..."
-            updateContent={setPast} />
-          <ImportFromFileBody
-            label="Select right file to compare..."
-            updateContent={setCurrent} />
-        </Grid>
+        <Paper>
+          <Grid
+            container
+            direction="row"
+            justify="center"
+            alignItems="center"
+          >
+            <ImportFromFileBody
+              label="Select left file to compare..."
+              updateContent={setPast} />
+            <ImportFromFileBody
+              label="Select right file to compare..."
+              updateContent={setCurrent} />
+          </Grid>
+        </Paper>
+        <Paper>
+          <TextField
+            id="standard-number"
+            label="Threshold"
+            type="number"
+            inputProps={{
+              step: 0.1
+            }}
+            value={threshold}
+            onChange={(event) => { setThreshold(event.target.value) }}
+          />
+        </Paper>
         <MyBox>
           {
             (past && current) &&
@@ -90,7 +104,7 @@ function App() {
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
                     ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
-                    threshold: 2,
+                    threshold: threshold,
                   }} />
               </TabPanel>
               <TabPanel value={value} index={1}>
@@ -100,7 +114,7 @@ function App() {
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
                     ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
-                    threshold: 2,
+                    threshold: threshold,
                   }} />
               </TabPanel>
               <TabPanel value={value} index={2}>
@@ -110,7 +124,7 @@ function App() {
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
                     ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
-                    threshold: 2,
+                    threshold: threshold,
                   }} />
               </TabPanel>
               <TabPanel value={value} index={3}>
@@ -120,7 +134,7 @@ function App() {
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
                     ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
-                    threshold: 2,
+                    threshold: threshold,
                   }} />
               </TabPanel>
             </React.Fragment>
