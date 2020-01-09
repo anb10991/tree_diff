@@ -1,5 +1,6 @@
 const space = '  ';
 
+// Get Levenshtein distance between two strings.
 const LevenshteinDistance = (s, t) => {
     const m = s.length;
     const n = t.length;
@@ -27,6 +28,20 @@ const LevenshteinDistance = (s, t) => {
     return d[m][n];
 }
 
+// Get the string representation of the object.
+// Remove the children attribute from the object because the string will be too long
+// and hard to calculate levenshtein distance.
+const getString = (obj) => {
+    let newObj = {};
+    for (const [key, value] in Object.entries(obj)) {
+        if (key !== 'children') {
+            newObj[key] = value;
+        }
+    }
+    return JSON.stringify(newObj);
+}
+
+// Get string representation of the object in tree-like format
 const convertToString = (obj, depth = 0) => {
     let returnStr;
     if (Array.isArray(obj)) {
@@ -47,11 +62,12 @@ const convertToString = (obj, depth = 0) => {
     return returnStr;
 }
 
+// Compare two objects
 export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: ['id'] }, depth = 0, ll = '', rl = '') => {
     const { baseKeys, ignoreKeys, threshold } = option;
     let lt = [], rt = [];
 
-    if (Array.isArray(left) && Array.isArray(right)) {
+    if (Array.isArray(left) && Array.isArray(right)) {  // In case of array, loop through all the items and find similar ones
         let lf = [], rf = [];
         for (let lidx = 0; lidx < left.length; lidx++) {
             let identical = false;
@@ -59,13 +75,14 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             // Search for exact matching nodes
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
-                for (const baseKey of baseKeys) {
+                for (const baseKey of baseKeys) { 
+                    // compare node name
                     if (left[lidx][baseKey] && right[ridx][baseKey] && left[lidx][baseKey] === right[ridx][baseKey]) {
                         identical = true;
                         break;
                     }
                 }
-                if (identical) {
+                if (identical) {    // once find the same one
                     lf[lidx] = true; rf[ridx] = true;
                     const diff = compare(left[lidx], right[ridx], option, depth + 1);
                     lt.push(...diff.left);
@@ -73,7 +90,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                     break;
                 }
             }
-            if (identical) {
+            if (identical) {    // once find the same one
                 continue;
             }
 
@@ -81,11 +98,39 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
                 for (const baseKey of baseKeys) {
+                    // compare Levenshtein distance between node name
                     if (left[lidx][baseKey] && right[ridx][baseKey] &&
                         Math.abs(1 - LevenshteinDistance(left[lidx][baseKey], right[ridx][baseKey]) / Math.max(left[lidx][baseKey].length, right[ridx][baseKey].length)) > threshold) {
                         identical = true;
                         break;
                     }
+                }
+                if (identical) {    // once find the similar one
+                    lf[lidx] = true; rf[ridx] = true;
+                    const diff = compare(left[lidx], right[ridx], option, depth + 1);
+                    lt.push(...diff.left);
+                    rt.push(...diff.right);
+                    break;
+                }
+            }
+            if (identical) {    // once find the similar one
+                continue;
+            }
+
+            const leftString = getString(left[lidx]);
+            // Check for renamed nodes by node content match
+            for (let ridx = 0; ridx < right.length; ridx++) {
+                if (rf[ridx]) continue;
+                const rightString = getString(right[ridx]);
+                
+                // compare Levenshtein distance between node content string
+                // here, we are excluding children attribute because it can produce memory size exception
+                if (Math.abs(1 - LevenshteinDistance(
+                        leftString,
+                        rightString
+                    ) / Math.max(leftString.length, rightString.length)) > threshold) {
+                    identical = true;
+                    break;
                 }
                 if (identical) {
                     lf[lidx] = true; rf[ridx] = true;
@@ -99,6 +144,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                 continue;
             }
         }
+
         for (let lidx = 0; lidx < left.length; lidx++) {
             if (!lf[lidx]) {
                 let stringArray;
