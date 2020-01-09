@@ -2,30 +2,42 @@ const space = '  ';
 
 // Get Levenshtein distance between two strings.
 const LevenshteinDistance = (s, t) => {
-    const m = s.length;
-    const n = t.length;
-    let d = [];
-    for (let i = 0; i <= m; i++) {
-        d[i] = [];
-        for (let j = 0; j <= n; j++) {
-            d[i][j] = (i > 0 && j === 0) ? i : ((j > 0 && i === 0) ? j : 0);
-        }
+    // create two work vectors of integer distances
+    let v0 = [];
+    let v1 = [];
+
+    // initialize v0 (the previous row of distances)
+    // this row is A[0][i]: edit distance for an empty s
+    // the distance is just the number of characters to delete from t
+    for (let i = 0; i <= n; i++) {
+        v0[i] = i
     }
 
-    for (let j = 1; j <= n; j++) {
-        for (let i = 1; i <= m; i++) {
-            let substitutionCost = 0;
-            if (s[i - 1] !== t[j - 1]) {
-                substitutionCost = 1;
-            }
-            d[i][j] = Math.min(
-                d[i - 1][j] + 1,                    // deletion
-                d[i][j - 1] + 1,                    // insertion
-                d[i - 1][j - 1] + substitutionCost  // substitution
-            );
+    for (let i = 0; i < m; i++) {
+        // calculate v1 (current row distances) from the previous row v0
+
+        // first element of v1 is A[i+1][0]
+        //   edit distance is delete (i+1) chars from s to match empty t
+        v1[0] = i + 1;
+
+        // use formula to fill in the rest of the row
+        for (let j = 0; j < n; j++) {
+            // calculating costs for A[i+1][j+1]
+            const deletionCost = v0[j + 1] + 1;
+            const insertionCost = v1[j] + 1;
+            const substitutionCost = v0[j] + (s[i] === t[j] ? 0 : 1);
+            v1[j + 1] = Math.min(deletionCost, insertionCost, substitutionCost)
+        }
+        // copy v1 (current row) to v0 (previous row) for next iteration
+        // since data in v1 is always invalidated, a swap without copy could be more efficient
+        for (let j = 0; j < n; j++) {
+            const temp = v0[j];
+            v0[j] = v1[j];
+            v1[j] = temp;
         }
     }
-    return d[m][n];
+    // after the last swap, the results of v1 are now in v0
+    return v0[n];
 }
 
 // Get the string representation of the object.
