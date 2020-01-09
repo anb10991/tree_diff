@@ -3,6 +3,8 @@ const space = '  ';
 // Get Levenshtein distance between two strings.
 const LevenshteinDistance = (s, t) => {
     // create two work vectors of integer distances
+    const m = s.length;
+    const n = t.length;
     let v0 = [];
     let v1 = [];
 
