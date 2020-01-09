@@ -113,7 +113,7 @@ function App() {
                   current={current.fields}
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
+                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
                     threshold: threshold,
                   }} />
               </TabPanel>
@@ -123,7 +123,7 @@ function App() {
                   current={current.alerts}
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
+                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
                     threshold: threshold,
                   }} />
               </TabPanel>
@@ -133,7 +133,7 @@ function App() {
                   current={current.doses}
                   options={{
                     baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion'],
+                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
                     threshold: threshold,
                   }} />
               </TabPanel>
