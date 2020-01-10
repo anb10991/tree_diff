@@ -77,7 +77,7 @@ const convertToString = (obj, depth = 0) => {
             returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, depth + 1)},\n`;
         }
         // returnStr += `${space.repeat(depth)}}`;
-    } else {
+    } else if (obj !== undefined) {
         returnStr = `"${obj}"`;
     }
     return returnStr;
@@ -319,8 +319,8 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             rt = [];
         }
     } else if (left !== right) {
-        lt.push(`${space.repeat(depth + 1)}${left},`);
-        rt.push(`${space.repeat(depth + 1)}${right},`);
+        lt.push(`${space.repeat(depth + 1)}${left === undefined ? '' : left},`);
+        rt.push(`${space.repeat(depth + 1)}${right === undefined ? '' : right},`);
     }
     return { left: lt, right: rt };
 }
