@@ -262,10 +262,10 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             }
         }
         if (lt.length) {
-            lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : '') + '[');
-            rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : '') + '[');
-            lt.push(space.repeat(depth) + '],');
-            rt.push(space.repeat(depth) + '],');
+            // lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : '') + '[');
+            // rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : '') + '[');
+            // lt.push(space.repeat(depth) + '],');
+            // rt.push(space.repeat(depth) + '],');
         }
     } else if (typeof left === 'object' && typeof right === 'object') {
         const keySet = new Set([...Object.keys(left), ...Object.keys(right)]);
@@ -309,10 +309,10 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             }
         });
         if (hasDiff) {
-            lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : '') + '{');
-            rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : '') + '{');
-            lt.push(space.repeat(depth) + '},');
-            rt.push(space.repeat(depth) + '},');
+            // lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : '') + '{');
+            // rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : '') + '{');
+            // lt.push(space.repeat(depth) + '},');
+            // rt.push(space.repeat(depth) + '},');
         } else {
             lt = [];
             rt = [];
