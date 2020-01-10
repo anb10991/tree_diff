@@ -12,7 +12,7 @@ const LevenshteinDistance = (s, t) => {
     // this row is A[0][i]: edit distance for an empty s
     // the distance is just the number of characters to delete from t
     for (let i = 0; i <= n; i++) {
-        v0[i] = i
+        v0[i] = i;
     }
 
     for (let i = 0; i < m; i++) {
@@ -39,16 +39,22 @@ const LevenshteinDistance = (s, t) => {
         }
     }
     // after the last swap, the results of v1 are now in v0
-    return v0[n];
+    return v1[n];
 }
 
 // Get the string representation of the object.
 // Remove the children attribute from the object because the string will be too long
 // and hard to calculate levenshtein distance.
-const getString = (obj) => {
+const getString = (obj, option) => {
+    if (Array.isArray(obj)) {
+        return JSON.stringify(obj);
+    }
+    if (typeof obj !== 'object') {
+        return `${obj}`;
+    }
     let newObj = {};
-    for (const [key, value] in Object.entries(obj)) {
-        if (key !== 'children') {
+    for (const [key, value] of Object.entries(obj)) {
+        if (['children', ...option.ignoreKeys].indexOf(key) === -1) {
             newObj[key] = value;
         }
     }
@@ -76,6 +82,87 @@ const convertToString = (obj, depth = 0) => {
     return returnStr;
 }
 
+// Get the average threshold between two objects by its content
+export const getAvgThreshold = (left, right, option) => {
+    const { baseKeys, threshold } = option;
+    let childThreshold = 0;
+
+    // Calculate the children nodes first
+    if (left.children && right.children && (left.children.length + right.children.length)) {
+        let lf = [], rf = [];
+
+        // Search for exact matching nodes
+        for (let lidx = 0; lidx < left.children.length; lidx++) {
+            if (lf[lidx]) continue;
+            let identical = false;
+            for (let ridx = 0; ridx < right.children.length; ridx++) {
+                if (rf[ridx]) continue;
+                for (const baseKey of baseKeys) {
+                    // compare node name
+                    if (left.children[lidx][baseKey] !== undefined &&
+                        right.children[ridx][baseKey] !== undefined &&
+                        left.children[lidx][baseKey] === right.children[ridx][baseKey]) {
+                        identical = true;
+                        break;
+                    }
+                }
+                if (identical) {    // once find the same one
+                    lf[lidx] = true; rf[ridx] = true;
+                    childThreshold += getAvgThreshold(left.children[lidx], right.children[ridx], option);
+                    break;
+                }
+            }
+        }
+
+        // Check for renamed nodes using LevenshteinDistance
+        for (let lidx = 0; lidx < left.children.length; lidx++) {
+            if (lf[lidx]) continue;
+            let identical = false;
+            for (let ridx = 0; ridx < right.children.length; ridx++) {
+                if (rf[ridx]) continue;
+                for (const baseKey of baseKeys) {
+                    // compare Levenshtein distance between node name
+                    if (left.children[lidx][baseKey] !== undefined &&
+                        right.children[ridx][baseKey] !== undefined &&
+                        Math.abs(1 - LevenshteinDistance(left.children[lidx][baseKey], right.children[ridx][baseKey])
+                            / Math.max(left.children[lidx][baseKey].length, right.children[ridx][baseKey].length)) > threshold) {
+                        identical = true;
+                        break;
+                    }
+                }
+                if (identical) {    // once find the similar one
+                    lf[lidx] = true; rf[ridx] = true;
+                    childThreshold += getAvgThreshold(left.children[lidx], right.children[ridx], option);
+                    break;
+                }
+            }
+        }
+
+        // Skip getting threshold by content, for now
+        for (let lidx = 0; lidx < left.children.length; lidx++) {
+            if (lf[lidx]) continue;
+            let maxThreshold = 0; let maxRIdx = -1;
+            for (let ridx = 0; ridx < right.children.length; ridx++) {
+                if (rf[ridx]) continue;
+                const tempThreshold = getAvgThreshold(left.children[lidx], right.children[ridx], option);
+                if (maxThreshold < tempThreshold) {
+                    maxThreshold = tempThreshold;
+                    maxRIdx = ridx;
+                }
+            }
+            if (maxRIdx !== -1) {
+                childThreshold += maxThreshold;
+                lf[lidx] = true; rf[maxRIdx] = true;
+            }
+        }
+
+        childThreshold /= Math.max(left.children ? left.children.length : 0, right.children ? right.children.length : 0);
+    }
+    const lStr = getString(left, option);
+    const rStr = getString(right, option);
+    return Math.max(Math.abs(1 - LevenshteinDistance(lStr, rStr) / Math.max(lStr.length, rStr.length)), childThreshold);
+}
+
 // Compare two objects
 export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: ['id'] }, depth = 0, ll = '', rl = '') => {
     const { baseKeys, ignoreKeys, threshold } = option;
@@ -83,15 +170,16 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
 
     if (Array.isArray(left) && Array.isArray(right)) {  // In case of array, loop through all the items and find similar ones
         let lf = [], rf = [];
+        
+        // Search for exact matching nodes
         for (let lidx = 0; lidx < left.length; lidx++) {
+            if (lf[lidx]) continue;
             let identical = false;
-
-            // Search for exact matching nodes
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
-                for (const baseKey of baseKeys) { 
+                for (const baseKey of baseKeys) {
                     // compare node name
-                    if (left[lidx][baseKey] && right[ridx][baseKey] && left[lidx][baseKey] === right[ridx][baseKey]) {
+                    if (left[lidx][baseKey] !== undefined && right[ridx][baseKey] !== undefined && left[lidx][baseKey] === right[ridx][baseKey]) {
                         identical = true;
                         break;
                     }
@@ -104,16 +192,17 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                     break;
                 }
             }
-            if (identical) {    // once find the same one
-                continue;
-            }
+        }
 
-            // Check for renamed nodes using LevenshteinDistance
+        // Check for renamed nodes using LevenshteinDistance
+        for (let lidx = 0; lidx < left.length; lidx++) {
+            if (lf[lidx]) continue;
+            let identical = false;
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
                 for (const baseKey of baseKeys) {
                     // compare Levenshtein distance between node name
-                    if (left[lidx][baseKey] && right[ridx][baseKey] &&
+                    if (left[lidx][baseKey] !== undefined && right[ridx][baseKey] !== undefined &&
                         Math.abs(1 - LevenshteinDistance(left[lidx][baseKey], right[ridx][baseKey]) / Math.max(left[lidx][baseKey].length, right[ridx][baseKey].length)) > threshold) {
                         identical = true;
                         break;
@@ -127,35 +216,20 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                     break;
                 }
             }
-            if (identical) {    // once find the similar one
-                continue;
-            }
+        }
 
-            const leftString = getString(left[lidx]);
-            // Check for renamed nodes by node content match
+        // Compare the nodes by its content
+        for (let lidx = 0; lidx < left.length; lidx++) {
+            if (lf[lidx]) continue;
             for (let ridx = 0; ridx < right.length; ridx++) {
                 if (rf[ridx]) continue;
-                const rightString = getString(right[ridx]);
-                
-                // compare Levenshtein distance between node content string
-                // here, we are excluding children attribute because it can produce memory size exception
-                if (Math.abs(1 - LevenshteinDistance(
-                        leftString,
-                        rightString
-                    ) / Math.max(leftString.length, rightString.length)) > threshold) {
-                    identical = true;
-                    break;
-                }
-                if (identical) {
+                if (getAvgThreshold(left[lidx], right[ridx], option) > threshold) {
                     lf[lidx] = true; rf[ridx] = true;
                     const diff = compare(left[lidx], right[ridx], option, depth + 1);
                     lt.push(...diff.left);
                     rt.push(...diff.right);
                     break;
                 }
-            }
-            if (identical) {
-                continue;
             }
         }
 
@@ -173,7 +247,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                 rt.push(...stringArray);
             }
         }
-        for (let ridx = 0; ridx < ridx.length; ridx++) {
+        for (let ridx = 0; ridx < right.length; ridx++) {
             if (!rf[ridx]) {
                 let stringArray;
                 if (typeof right[ridx] === 'object') {
@@ -243,7 +317,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             lt = [];
             rt = [];
         }
-    } else {
+    } else if (left !== right) {
         lt.push(`${space.repeat(depth + 1)}${left},`);
         rt.push(`${space.repeat(depth + 1)}${right},`);
     }
