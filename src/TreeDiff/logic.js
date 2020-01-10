@@ -45,12 +45,13 @@ const LevenshteinDistance = (s, t) => {
 // Get the string representation of the object.
 // Remove the children attribute from the object because the string will be too long
 // and hard to calculate levenshtein distance.
+// Here, remove white spaces
 const getString = (obj, option) => {
     if (Array.isArray(obj)) {
-        return JSON.stringify(obj);
+        return JSON.stringify(obj).trim();
     }
     if (typeof obj !== 'object') {
-        return `${obj}`;
+        return `${obj}`.trim();
     }
     let newObj = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -58,7 +59,7 @@ const getString = (obj, option) => {
             newObj[key] = value;
         }
     }
-    return JSON.stringify(newObj);
+    return JSON.stringify(newObj).trim();
 }
 
 // Get string representation of the object in tree-like format
