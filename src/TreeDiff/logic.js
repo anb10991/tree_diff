@@ -66,17 +66,17 @@ const getString = (obj, option) => {
 const convertToString = (obj, depth = 0) => {
     let returnStr;
     if (Array.isArray(obj)) {
-        returnStr = '[\n';
+        // returnStr = '[\n';
         for (const value of obj) {
             returnStr += `${space.repeat(depth + 1)}${convertToString(value, depth + 1)},\n`;
         }
-        returnStr += `${space.repeat(depth)}]`;
+        // returnStr += `${space.repeat(depth)}]`;
     } else if (typeof obj === 'object') {
-        returnStr = '{\n';
+        // returnStr = '{\n';
         for (const [key, value] of Object.entries(obj)) {
             returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, depth + 1)},\n`;
         }
-        returnStr += `${space.repeat(depth)}}`;
+        // returnStr += `${space.repeat(depth)}}`;
     } else {
         returnStr = `"${obj}"`;
     }
