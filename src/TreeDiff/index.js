@@ -15,7 +15,7 @@ const TreeDiff = (props) => {
     const diffString = compare(past, current, options);
 
     const getRowHeight = ({ index }) => {
-        const characterCount = 60;
+        const characterCount = 73;
         return 30 * Math.ceil(Math.max(
             diffString.left[index].length / characterCount,
             diffString.right[index].length / characterCount
@@ -30,16 +30,20 @@ const TreeDiff = (props) => {
                 height: '30px'
             },
             content: {
-                width: '400px',
+                width: '400px'
             },
             diffContainer: {
                 whiteSpace: 'nowrap',
-                wordBreak: 'break-all'
+                pre: {
+                    wordBreak: 'break-all',
+                    lineHeight: '30px'
+                }
             },
             wordDiff: {
                 paddingTop: 0,
                 paddingBottom: 0,
-                lineHeight: '30px'
+                lineHeight: '30px',
+                display: 'inline'
             }
         };
         return (

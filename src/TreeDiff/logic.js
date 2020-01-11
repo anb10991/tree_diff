@@ -63,18 +63,20 @@ const getString = (obj, option) => {
 }
 
 // Get string representation of the object in tree-like format
-const convertToString = (obj, depth = 0) => {
-    let returnStr;
+const convertToString = (obj, option, depth = 0) => {
+    let returnStr = '';
     if (Array.isArray(obj)) {
-        // returnStr = '[\n';
+        returnStr = '\n';
         for (const value of obj) {
-            returnStr += `${space.repeat(depth + 1)}${convertToString(value, depth + 1)},\n`;
+            returnStr += `${space.repeat(depth + 1)}${convertToString(value, option, depth + 1)},\n`;
         }
         // returnStr += `${space.repeat(depth)}]`;
     } else if (typeof obj === 'object') {
-        // returnStr = '{\n';
+        returnStr = '\n';
         for (const [key, value] of Object.entries(obj)) {
-            returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, depth + 1)},\n`;
+            if (option.ignoreKeys.indexOf(key) === -1) {
+                returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, option, depth + 1)},\n`;
+            }
         }
         // returnStr += `${space.repeat(depth)}}`;
     } else if (obj !== undefined) {
@@ -162,12 +164,6 @@ export const getAvgThreshold = (left, right, option) => {
     const lStr = getString(left, option);
     const rStr = getString(right, option);
 
-    if (left.containerTitle === 'Extremities') {
-        console.log(left);
-        console.log(right);
-        console.log(childThreshold);
-        console.log(Math.abs(1 - LevenshteinDistance(lStr, rStr) / Math.max(lStr.length, rStr.length)));
-    }
     return Math.max(Math.abs(1 - LevenshteinDistance(lStr, rStr) / Math.max(lStr.length, rStr.length)), childThreshold);
 }
 
@@ -245,7 +241,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             if (!lf[lidx]) {
                 let stringArray;
                 if (typeof left[lidx] === 'object') {
-                    stringArray = (`${space.repeat(depth + 1)}` + convertToString(left[lidx], depth + 1)).split('\n');
+                    stringArray = (`${space.repeat(depth + 1)}` + convertToString(left[lidx], option, depth + 1)).split('\n');
                 } else {
                     stringArray = [`${space.repeat(depth + 1)}${left[lidx]},`];
                 }
@@ -259,7 +255,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             if (!rf[ridx]) {
                 let stringArray;
                 if (typeof right[ridx] === 'object') {
-                    stringArray = (`${space.repeat(depth + 1)}` + convertToString(right[ridx], depth + 1)).split('\n');
+                    stringArray = (`${space.repeat(depth + 1)}` + convertToString(right[ridx], option, depth + 1)).split('\n');
                 } else {
                     stringArray = [`${space.repeat(depth + 1)}${right[ridx]},`];
                 }
@@ -269,7 +265,9 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                 lt.push(...stringArray);
             }
         }
-        if (lt.length) {
+        if (lt.length && (ll || rl)) {
+            lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : ''));
+            rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : ''));
             // lt.unshift(space.repeat(depth) + (ll ? '"' + ll + '": ' : '') + '[');
             // rt.unshift(space.repeat(depth) + (rl ? '"' + rl + '": ' : '') + '[');
             // lt.push(space.repeat(depth) + '],');
@@ -296,7 +294,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                     if (typeof left[currentKey] === 'object') {
                         lt.push(
                             `${space.repeat(depth + 1)}"${currentKey}": ` +
-                            convertToString(left[currentKey], depth + 1));
+                            convertToString(left[currentKey], option, depth + 1));
                     } else {
                         lt.push(`${space.repeat(depth + 1)}"${currentKey}": "${left[currentKey]}",`);
                     }
@@ -307,7 +305,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
                     if (typeof right[currentKey] === 'object') {
                         rt.push(
                             `${space.repeat(depth + 1)}"${currentKey}":` +
-                            convertToString(right[currentKey], depth + 1));
+                            convertToString(right[currentKey], option, depth + 1));
                     } else {
                         rt.push(`${space.repeat(depth + 1)}"${currentKey}": "${right[currentKey]}",`);
                     }

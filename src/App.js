@@ -1,7 +1,20 @@
 import React, { useState } from 'react'
 import './App.css'
 
-import { Container, Grid, Box, AppBar, Tabs, Tab, Typography, Paper, TextField } from '@material-ui/core'
+import {
+  Container,
+  Grid,
+  Box,
+  AppBar,
+  Tabs,
+  Tab,
+  Typography,
+  Paper,
+  TextField,
+  FormControlLabel,
+  FormGroup,
+  Checkbox
+} from '@material-ui/core'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import lightBlue from '@material-ui/core/colors/lightBlue'
 import blue from '@material-ui/core/colors/blue'
@@ -50,11 +63,36 @@ function App() {
   const [current, setCurrent] = useState(null)
   const [value, setValue] = useState(0)
   const [threshold, setThreshold] = useState(0.9)
+  const [ignoreMandatory, setIgnoreMandatory] = useState(false)
+  const [ignorePosition, setIgnorePosition] = useState(false)
+  const [ignoreExport, setIgnoreExport] = useState(false)
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   }
 
+  const handleCheckboxChange = name => event => {
+    switch (name) {
+      case 'ignoreMandatory':
+        setIgnoreMandatory(event.target.checked);
+        break;
+      case 'ignorePosition':
+        setIgnorePosition(event.target.checked);
+        break;
+      case 'ignoreExport':
+        setIgnoreExport(event.target.checked);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const baseKeys = ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'];
+  const ignoreKeys = ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version',
+    ignoreMandatory ? 'mandatory' : null, ignorePosition ? 'position' : null,
+    ignoreExport ? 'export' : null].filter(e => e !== null);
+
+  console.log(ignoreKeys);
   return (
     <MuiThemeProvider theme={myTheme}>
       <Container>
@@ -74,16 +112,48 @@ function App() {
           </Grid>
         </Paper>
         <Paper>
-          <TextField
-            id="standard-number"
-            label="Threshold"
-            type="number"
-            inputProps={{
-              step: 0.1
-            }}
-            value={threshold}
-            onChange={(event) => { setThreshold(event.target.value) }}
-          />
+          <FormGroup row>
+            <TextField
+              id="standard-number"
+              label="Threshold"
+              type="number"
+              inputProps={{
+                step: 0.1
+              }}
+              value={threshold}
+              onChange={(event) => { setThreshold(event.target.value) }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={ignoreMandatory}
+                  onChange={handleCheckboxChange('ignoreMandatory')}
+                  value="ignoreMandatory"
+                  color="primary" />
+              }
+              label="Ignore Mandatory"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={ignorePosition}
+                  onChange={handleCheckboxChange('ignorePosition')}
+                  value="ignorePosition"
+                  color="primary" />
+              }
+              label="Ignore Position"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={ignoreExport}
+                  onChange={handleCheckboxChange('ignoreExport')}
+                  value="ignoreExport"
+                  color="primary" />
+              }
+              label="Ignore Export"
+            />
+          </FormGroup>
         </Paper>
         <MyBox>
           {
@@ -102,8 +172,8 @@ function App() {
                   past={past.categories}
                   current={current.categories}
                   options={{
-                    baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
+                    baseKeys: baseKeys,
+                    ignoreKeys: ignoreKeys,
                     threshold: threshold,
                   }} />
               </TabPanel>
@@ -112,8 +182,8 @@ function App() {
                   past={past.fields}
                   current={current.fields}
                   options={{
-                    baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
+                    baseKeys: baseKeys,
+                    ignoreKeys: ignoreKeys,
                     threshold: threshold,
                   }} />
               </TabPanel>
@@ -122,8 +192,8 @@ function App() {
                   past={past.alerts}
                   current={current.alerts}
                   options={{
-                    baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
+                    baseKeys: baseKeys,
+                    ignoreKeys: ignoreKeys,
                     threshold: threshold,
                   }} />
               </TabPanel>
