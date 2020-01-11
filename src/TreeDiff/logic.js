@@ -161,6 +161,13 @@ export const getAvgThreshold = (left, right, option) => {
     }
     const lStr = getString(left, option);
     const rStr = getString(right, option);
+
+    if (left.containerTitle === 'Extremities') {
+        console.log(left);
+        console.log(right);
+        console.log(childThreshold);
+        console.log(Math.abs(1 - LevenshteinDistance(lStr, rStr) / Math.max(lStr.length, rStr.length)));
+    }
     return Math.max(Math.abs(1 - LevenshteinDistance(lStr, rStr) / Math.max(lStr.length, rStr.length)), childThreshold);
 }
 
@@ -319,8 +326,8 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
             rt = [];
         }
     } else if (left !== right) {
-        lt.push(`${space.repeat(depth + 1)}${left === undefined ? '' : left},`);
-        rt.push(`${space.repeat(depth + 1)}${right === undefined ? '' : right},`);
+        lt.push(`${space.repeat(depth + 1)}${left === undefined ? '' : left + ','}`);
+        rt.push(`${space.repeat(depth + 1)}${right === undefined ? '' : right + ','}`);
     }
     return { left: lt, right: rt };
 }

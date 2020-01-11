@@ -15,18 +15,32 @@ const TreeDiff = (props) => {
     const diffString = compare(past, current, options);
 
     const getRowHeight = ({ index }) => {
-        return 30 * Math.max(diffString.left[index].split('\n').length, diffString.right[index].split('\n').length);
+        const characterCount = 60;
+        return 30 * Math.ceil(Math.max(
+            diffString.left[index].length / characterCount,
+            diffString.right[index].length / characterCount
+        ));
     }
 
     const rowRenderer = ({ key, index, style }) => {
         const newStyles = {
             marker: {
-                width: 'auto',
-                minWidth: 10,
+                width: '10px',
                 textAlign: 'center',
                 height: '30px'
             },
-
+            content: {
+                width: '400px',
+            },
+            diffContainer: {
+                whiteSpace: 'nowrap',
+                wordBreak: 'break-all'
+            },
+            wordDiff: {
+                paddingTop: 0,
+                paddingBottom: 0,
+                lineHeight: '30px'
+            }
         };
         return (
             <div key={key} style={style}>

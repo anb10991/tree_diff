@@ -1,3 +1,7 @@
+.diff-container {
+    width: 100%;
+}
+
 .AutoSizerWrapper {
     flex: 1 1 auto;
 }
