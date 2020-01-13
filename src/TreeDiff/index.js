@@ -66,7 +66,7 @@ const TreeDiff = (props) => {
         marker: {
             width: '10px',
             textAlign: 'center',
-            height: '30px'
+            height: '14px'
         },
         content: {
             width: '400px'
@@ -75,13 +75,13 @@ const TreeDiff = (props) => {
             whiteSpace: 'nowrap',
             pre: {
                 wordBreak: 'break-all',
-                lineHeight: '30px'
+                lineHeight: '14px'
             }
         },
         wordDiff: {
             paddingTop: 0,
             paddingBottom: 0,
-            lineHeight: '30px',
+            lineHeight: '14px',
             display: 'inline'
         }
     };
