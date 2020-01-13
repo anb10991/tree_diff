@@ -92,7 +92,6 @@ function App() {
     ignoreMandatory ? 'mandatory' : null, ignorePosition ? 'position' : null,
     ignoreExport ? 'export' : null].filter(e => e !== null);
 
-  console.log(ignoreKeys);
   return (
     <MuiThemeProvider theme={myTheme}>
       <Container>
