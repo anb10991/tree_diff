@@ -86,7 +86,7 @@ const TreeDiff = (props) => {
         }
     };
 
-    for (let index = 0; index < 100; index++) {
+    for (let index = 0; index < diffString.left.length; index++) {
         rows.push(
             <div key={index}>
                 <ReactDiffViewer
