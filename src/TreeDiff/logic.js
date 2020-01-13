@@ -55,7 +55,8 @@ const getString = (obj, option) => {
     }
     let newObj = {};
     for (const [key, value] of Object.entries(obj)) {
-        if (['children', ...option.ignoreKeys].indexOf(key) === -1) {
+        if ([...option.ignoreKeys].indexOf(key) === -1 &&
+            (!Array.isArray(value) || typeof value[0] != 'object')) {
             newObj[key] = value;
         }
     }
@@ -90,77 +91,88 @@ export const getAvgThreshold = (left, right, option) => {
     const { baseKeys, threshold } = option;
     let childThreshold = 0;
 
-    // Calculate the children nodes first
-    if (left.children && right.children && (left.children.length + right.children.length)) {
-        let lf = [], rf = [];
+    // Calculate array attributes, first
+    const keySet = new Set([...Object.keys(left), ...Object.keys(right)]);
+    keySet.forEach((currentValue, currentKey, set) => {
+        if (left[currentKey] &&
+            right[currentKey] &&
+            Array.isArray(left[currentKey]) &&
+            Array.isArray(right[currentKey]) &&
+            typeof left[currentKey][0] === 'object' &&
+            typeof right[currentKey][0] === 'object') {
+            let lf = [], rf = [];
 
-        // Search for exact matching nodes
-        for (let lidx = 0; lidx < left.children.length; lidx++) {
-            if (lf[lidx]) continue;
-            let identical = false;
-            for (let ridx = 0; ridx < right.children.length; ridx++) {
-                if (rf[ridx]) continue;
-                for (const baseKey of baseKeys) {
-                    // compare node name
-                    if (left.children[lidx][baseKey] !== undefined &&
-                        right.children[ridx][baseKey] !== undefined &&
-                        left.children[lidx][baseKey] === right.children[ridx][baseKey]) {
-                        identical = true;
+            // Search for exact matching nodes
+            for (let lidx = 0; lidx < left[currentKey].length; lidx++) {
+                if (lf[lidx]) continue;
+                let identical = false;
+                for (let ridx = 0; ridx < right[currentKey].length; ridx++) {
+                    if (rf[ridx]) continue;
+                    for (const baseKey of baseKeys) {
+                        // compare node name
+                        if (left[currentKey][lidx][baseKey] !== undefined &&
+                            right[currentKey][ridx][baseKey] !== undefined &&
+                            left[currentKey][lidx][baseKey] === right[currentKey][ridx][baseKey]) {
+                            identical = true;
+                            break;
+                        }
+                    }
+                    if (identical) {    // once find the same one
+                        lf[lidx] = true; rf[ridx] = true;
+                        childThreshold += 1;
                         break;
                     }
                 }
-                if (identical) {    // once find the same one
-                    lf[lidx] = true; rf[ridx] = true;
-                    childThreshold += getAvgThreshold(left.children[lidx], right.children[ridx], option);
-                    break;
-                }
             }
-        }
 
-        // Check for renamed nodes using LevenshteinDistance
-        for (let lidx = 0; lidx < left.children.length; lidx++) {
-            if (lf[lidx]) continue;
-            let identical = false;
-            for (let ridx = 0; ridx < right.children.length; ridx++) {
-                if (rf[ridx]) continue;
-                for (const baseKey of baseKeys) {
-                    // compare Levenshtein distance between node name
-                    if (left.children[lidx][baseKey] !== undefined &&
-                        right.children[ridx][baseKey] !== undefined &&
-                        Math.abs(1 - LevenshteinDistance(left.children[lidx][baseKey], right.children[ridx][baseKey])
-                            / Math.max(left.children[lidx][baseKey].length, right.children[ridx][baseKey].length)) > threshold) {
-                        identical = true;
+            // Check for renamed nodes using LevenshteinDistance
+            for (let lidx = 0; lidx < left[currentKey].length; lidx++) {
+                if (lf[lidx]) continue;
+                let identical = false;
+                for (let ridx = 0; ridx < right[currentKey].length; ridx++) {
+                    if (rf[ridx]) continue;
+                    for (const baseKey of baseKeys) {
+                        // compare Levenshtein distance between node name
+                        if (left[currentKey][lidx][baseKey] !== undefined &&
+                            right[currentKey][ridx][baseKey] !== undefined &&
+                            Math.abs(1 - LevenshteinDistance(left[currentKey][lidx][baseKey], right[currentKey][ridx][baseKey])
+                                / Math.max(left[currentKey][lidx][baseKey].length, right[currentKey][ridx][baseKey].length)) > threshold) {
+                            // once find the similar one
+                            identical = true;
+                            lf[lidx] = true; rf[ridx] = true;
+                            childThreshold += Math.abs(1 - LevenshteinDistance(left[currentKey][lidx][baseKey], right[currentKey][ridx][baseKey])
+                                / Math.max(left[currentKey][lidx][baseKey].length, right[currentKey][ridx][baseKey].length));
+                            break;
+                        }
+                    }
+                    if (identical) {
                         break;
                     }
                 }
-                if (identical) {    // once find the similar one
-                    lf[lidx] = true; rf[ridx] = true;
-                    childThreshold += getAvgThreshold(left.children[lidx], right.children[ridx], option);
-                    break;
+            }
+
+            // Skip getting threshold by content, for now
+            for (let lidx = 0; lidx < left[currentKey].length; lidx++) {
+                if (lf[lidx]) continue;
+                let maxThreshold = 0; let maxRIdx = -1;
+                for (let ridx = 0; ridx < right[currentKey].length; ridx++) {
+                    if (rf[ridx]) continue;
+                    const tempThreshold = getAvgThreshold(left[currentKey][lidx], right[currentKey][ridx], option);
+                    if (maxThreshold < tempThreshold) {
+                        maxThreshold = tempThreshold;
+                        maxRIdx = ridx;
+                    }
+                }
+                if (maxRIdx !== -1 && maxThreshold > threshold) {
+                    childThreshold += maxThreshold;
+                    lf[lidx] = true; rf[maxRIdx] = true;
                 }
             }
-        }
 
-        // Skip getting threshold by content, for now
-        for (let lidx = 0; lidx < left.children.length; lidx++) {
-            if (lf[lidx]) continue;
-            let maxThreshold = 0; let maxRIdx = -1;
-            for (let ridx = 0; ridx < right.children.length; ridx++) {
-                if (rf[ridx]) continue;
-                const tempThreshold = getAvgThreshold(left.children[lidx], right.children[ridx], option);
-                if (maxThreshold < tempThreshold) {
-                    maxThreshold = tempThreshold;
-                    maxRIdx = ridx;
-                }
-            }
-            if (maxRIdx !== -1) {
-                childThreshold += maxThreshold;
-                lf[lidx] = true; rf[maxRIdx] = true;
-            }
+            childThreshold /= Math.max(left[currentKey] ? left[currentKey].length : 0, right[currentKey] ? right[currentKey].length : 0);
         }
+    });
 
-        childThreshold /= Math.max(left.children ? left.children.length : 0, right.children ? right.children.length : 0);
-    }
     const lStr = getString(left, option);
     const rStr = getString(right, option);
 
@@ -174,7 +186,7 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
 
     if (Array.isArray(left) && Array.isArray(right)) {  // In case of array, loop through all the items and find similar ones
         let lf = [], rf = [];
-        
+
         // Search for exact matching nodes
         for (let lidx = 0; lidx < left.length; lidx++) {
             if (lf[lidx]) continue;
