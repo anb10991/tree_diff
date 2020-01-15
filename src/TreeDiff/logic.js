@@ -75,8 +75,14 @@ const convertToString = (obj, option, depth = 0) => {
     } else if (typeof obj === 'object') {
         returnStr = '\n';
         for (const [key, value] of Object.entries(obj)) {
-            if (option.ignoreKeys.indexOf(key) === -1) {
-                returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, option, depth + 1)},\n`;
+            if (option.collapsedNew) {
+                if (option.baseKeys.indexOf(key) !== -1) {
+                    returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, option, depth + 1)},\n`;
+                }
+            } else  {
+                if (option.ignoreKeys.indexOf(key) === -1) {
+                    returnStr += `${space.repeat(depth + 1)}"${key}": ${convertToString(value, option, depth + 1)},\n`;
+                }
             }
         }
         // returnStr += `${space.repeat(depth)}}`;
