@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import queryString from 'query-string';
+import './App.css';
 
 import {
   Container,
@@ -67,6 +68,35 @@ function App() {
   const [ignorePosition, setIgnorePosition] = useState(false)
   const [ignoreExport, setIgnoreExport] = useState(false)
   const [collapsedNew, setCollapsedNew] = useState(true)
+
+  useEffect(() => {
+    const parsed = queryString.parse(document.location.search);
+    const { leftVersionUrl, rightVersionUrl } = parsed;
+    if (leftVersionUrl && rightVersionUrl) {
+      let decodedUrlLeft;
+      let decodedUrlRight;
+      try {
+        decodedUrlLeft = decodeURI(leftVersionUrl);
+        decodedUrlRight = decodeURI(rightVersionUrl);
+      } catch (ex) {
+        alert("Urls are invalid.");
+      }
+      const fetchLeft = fetch(decodedUrlLeft).then(res => {
+        return res.json();
+      });
+      const fetchRight = fetch(decodedUrlRight).then(res => {
+        return res.json();
+      });
+      Promise.all([fetchLeft, fetchRight])
+        .then(([leftJson, rightJson]) => {
+          setPast(leftJson);
+          setCurrent(rightJson);
+        })
+        .catch(() => {
+          alert("An error has happened during fetching metadata.");
+        });
+    }
+  }, []);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
