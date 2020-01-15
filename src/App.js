@@ -66,6 +66,7 @@ function App() {
   const [ignoreMandatory, setIgnoreMandatory] = useState(false)
   const [ignorePosition, setIgnorePosition] = useState(false)
   const [ignoreExport, setIgnoreExport] = useState(false)
+  const [collapsedNew, setCollapsedNew] = useState(true)
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -81,6 +82,9 @@ function App() {
         break;
       case 'ignoreExport':
         setIgnoreExport(event.target.checked);
+        break;
+      case 'collapsedNew':
+        setCollapsedNew(event.target.checked);
         break;
       default:
         break;
@@ -153,6 +157,16 @@ function App() {
               }
               label="Ignore Export"
             />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={collapsedNew}
+                  onChange={handleCheckboxChange('collapsedNew')}
+                  value="collapsedNew"
+                  color="primary" />
+              }
+              label="Collapse new/deleted nodes"
+            />
           </FormGroup>
         </Paper>
         <MyBox>
@@ -175,6 +189,7 @@ function App() {
                     baseKeys: baseKeys,
                     ignoreKeys: ignoreKeys,
                     threshold: threshold,
+                    collapsedNew: collapsedNew
                   }} />
               </TabPanel>
               <TabPanel value={value} index={1}>
@@ -185,6 +200,7 @@ function App() {
                     baseKeys: baseKeys,
                     ignoreKeys: ignoreKeys,
                     threshold: threshold,
+                    collapsedNew: collapsedNew
                   }} />
               </TabPanel>
               <TabPanel value={value} index={2}>
@@ -195,6 +211,7 @@ function App() {
                     baseKeys: baseKeys,
                     ignoreKeys: ignoreKeys,
                     threshold: threshold,
+                    collapsedNew: collapsedNew
                   }} />
               </TabPanel>
               <TabPanel value={value} index={3}>
@@ -202,9 +219,10 @@ function App() {
                   past={past.doses}
                   current={current.doses}
                   options={{
-                    baseKeys: ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'],
-                    ignoreKeys: ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version'],
+                    baseKeys: baseKeys,
+                    ignoreKeys: ignoreKeys,
                     threshold: threshold,
+                    collapsedNew: collapsedNew
                   }} />
               </TabPanel>
             </React.Fragment>
