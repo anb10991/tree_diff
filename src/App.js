@@ -91,12 +91,11 @@ function App() {
     }
   };
 
-  const baseKeys = ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'info'];
+  const baseKeys = ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'ageGroup'];
   const ignoreKeys = ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version',
     ignoreMandatory ? 'mandatory' : null, ignorePosition ? 'position' : null,
     ignoreExport ? 'export' : null].filter(e => e !== null);
 
-  console.log(ignoreKeys);
   return (
     <MuiThemeProvider theme={myTheme}>
       <Container>
