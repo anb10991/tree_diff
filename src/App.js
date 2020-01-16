@@ -5,10 +5,6 @@ import {
   Container,
   Grid,
   Box,
-  AppBar,
-  Tabs,
-  Tab,
-  Typography,
   Paper,
   TextField,
   FormControlLabel,
@@ -19,7 +15,7 @@ import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import lightBlue from '@material-ui/core/colors/lightBlue'
 import blue from '@material-ui/core/colors/blue'
 
-import TreeDiff from './TreeDiff'
+import TreeDiffViewer from './TreeDiffViewer'
 import ImportFromFileBody from './ImportFromFileBody'
 import { styled } from '@material-ui/styles'
 
@@ -34,43 +30,15 @@ const MyBox = styled(Box)({
   height: 'calc(100vh - 150px)',
 });
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <Typography
-      component="div"
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <MyBox p={3}>{children}</MyBox>}
-    </Typography>
-  );
-}
-
-function a11yProps(index) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
-}
 
 function App() {
   const [past, setPast] = useState(null)
   const [current, setCurrent] = useState(null)
-  const [value, setValue] = useState(0)
   const [threshold, setThreshold] = useState(0.9)
   const [ignoreMandatory, setIgnoreMandatory] = useState(false)
   const [ignorePosition, setIgnorePosition] = useState(false)
   const [ignoreExport, setIgnoreExport] = useState(false)
   const [collapsedNew, setCollapsedNew] = useState(true)
-
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  }
 
   const handleCheckboxChange = name => event => {
     switch (name) {
@@ -91,7 +59,7 @@ function App() {
     }
   };
 
-  const baseKeys = ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle', 'ageGroup'];
+  const baseKeys = ['name', 'fieldName', 'tabName', 'controlTitle', 'containerTitle'];
   const ignoreKeys = ['id', 'fieldId', 'parentFieldId', 'tabId', 'metadataVersion', 'version',
     ignoreMandatory ? 'mandatory' : null, ignorePosition ? 'position' : null,
     ignoreExport ? 'export' : null].filter(e => e !== null);
@@ -171,60 +139,15 @@ function App() {
         <MyBox>
           {
             (past && current) &&
-            <React.Fragment>
-              <AppBar position="static">
-                <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
-                  <Tab label="Categories" {...a11yProps(0)} />
-                  <Tab label="Fields" {...a11yProps(1)} />
-                  <Tab label="Alerts" {...a11yProps(2)} />
-                  <Tab label="Doses" {...a11yProps(3)} />
-                </Tabs>
-              </AppBar>
-              <TabPanel value={value} index={0}>
-                <TreeDiff
-                  past={past.categories}
-                  current={current.categories}
-                  options={{
-                    baseKeys: baseKeys,
-                    ignoreKeys: ignoreKeys,
-                    threshold: threshold,
-                    collapsedNew: collapsedNew
-                  }} />
-              </TabPanel>
-              <TabPanel value={value} index={1}>
-                <TreeDiff
-                  past={past.fields}
-                  current={current.fields}
-                  options={{
-                    baseKeys: baseKeys,
-                    ignoreKeys: ignoreKeys,
-                    threshold: threshold,
-                    collapsedNew: collapsedNew
-                  }} />
-              </TabPanel>
-              <TabPanel value={value} index={2}>
-                <TreeDiff
-                  past={past.alerts}
-                  current={current.alerts}
-                  options={{
-                    baseKeys: baseKeys,
-                    ignoreKeys: ignoreKeys,
-                    threshold: threshold,
-                    collapsedNew: collapsedNew
-                  }} />
-              </TabPanel>
-              <TabPanel value={value} index={3}>
-                <TreeDiff
-                  past={past.doses}
-                  current={current.doses}
-                  options={{
-                    baseKeys: baseKeys,
-                    ignoreKeys: ignoreKeys,
-                    threshold: threshold,
-                    collapsedNew: collapsedNew
-                  }} />
-              </TabPanel>
-            </React.Fragment>
+            <TreeDiffViewer
+              past={past}
+              current={current}
+              options={{
+                baseKeys: baseKeys,
+                ignoreKeys: ignoreKeys,
+                threshold: threshold,
+                collapsedNew: collapsedNew
+              }} />
           }
           {
             (!past || !current) &&

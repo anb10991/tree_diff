@@ -347,3 +347,23 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
     }
     return { left: lt, right: rt };
 }
+
+export const updateDoses = (obj) => {
+    const findFieldName = (fields, fieldId) => {
+        for (const field of fields) {
+            if (field.id === fieldId) {
+                return field.fieldName;
+            }
+            const fieldName = findFieldName(field.children, fieldId);
+            if (fieldName) {
+                return fieldName
+            }
+        }
+        return null;
+    }
+
+    for (const dose of obj.doses) {
+        dose['fieldName'] = findFieldName(obj.fields, dose.fieldId);
+        dose['doseName'] = dose.fieldName + dose.ageGroup;
+    }
+}
