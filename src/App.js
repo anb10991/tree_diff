@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import queryString from 'query-string';
 import './App.css'
 
 import {
@@ -39,6 +40,40 @@ function App() {
   const [ignorePosition, setIgnorePosition] = useState(false)
   const [ignoreExport, setIgnoreExport] = useState(false)
   const [collapsedNew, setCollapsedNew] = useState(true)
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const parsed = queryString.parse(document.location.search);
+    const { leftVersionUrl, rightVersionUrl } = parsed;
+    if (leftVersionUrl && rightVersionUrl) {
+      let decodedUrlLeft;
+      let decodedUrlRight;
+      try {
+        decodedUrlLeft = decodeURI(leftVersionUrl);
+        decodedUrlRight = decodeURI(rightVersionUrl);
+      } catch (ex) {
+        alert("Urls are invalid.");
+      }
+      setIsLoading(true);
+      const fetchLeft = fetch(decodedUrlLeft).then(res => {
+        return res.json();
+      });
+      const fetchRight = fetch(decodedUrlRight).then(res => {
+        return res.json();
+      });
+      Promise.all([fetchLeft, fetchRight])
+        .then(([leftJson, rightJson]) => {
+          setPast(leftJson.result);
+          setCurrent(rightJson.result);
+        })
+        .catch(() => {
+          alert("An error has happened during fetching metadata.");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, []);
 
   const handleCheckboxChange = name => event => {
     switch (name) {
@@ -150,9 +185,10 @@ function App() {
               }} />
           }
           {
-            (!past || !current) &&
+            (!past || !current) && !isLoading &&
             <span>Open at least two files to compare</span>
           }
+          {isLoading && <h1>Loading metadata...</h1>}
         </MyBox>
       </Container>
     </MuiThemeProvider>
