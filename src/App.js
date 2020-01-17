@@ -68,6 +68,7 @@ function App() {
   const [ignorePosition, setIgnorePosition] = useState(false)
   const [ignoreExport, setIgnoreExport] = useState(false)
   const [collapsedNew, setCollapsedNew] = useState(true)
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const parsed = queryString.parse(document.location.search);
@@ -81,6 +82,7 @@ function App() {
       } catch (ex) {
         alert("Urls are invalid.");
       }
+      setIsLoading(true);
       const fetchLeft = fetch(decodedUrlLeft).then(res => {
         return res.json();
       });
@@ -89,11 +91,14 @@ function App() {
       });
       Promise.all([fetchLeft, fetchRight])
         .then(([leftJson, rightJson]) => {
-          setPast(leftJson);
-          setCurrent(rightJson);
+          setPast(leftJson.result);
+          setCurrent(rightJson.result);
         })
         .catch(() => {
           alert("An error has happened during fetching metadata.");
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     }
   }, []);
@@ -260,6 +265,7 @@ function App() {
             (!past || !current) &&
             <span>Open at least two files to compare</span>
           }
+          {isLoading && <h1>Loading metadata...</h1>}
         </MyBox>
       </Container>
     </MuiThemeProvider>
