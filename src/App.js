@@ -66,7 +66,7 @@ function App() {
 
   return (
     <MuiThemeProvider theme={myTheme}>
-      <Container>
+      <Container className="full-width">
         <Paper>
           <Grid
             container
