@@ -11,7 +11,7 @@ import {
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer';
 import { styled } from '@material-ui/styles'
 
-// import styles from './index.css'
+import styles from './index.css'
 
 // import { AutoSizer, List } from 'react-virtualized';
 // import 'react-virtualized/styles.css'; // only needs to be imported once
