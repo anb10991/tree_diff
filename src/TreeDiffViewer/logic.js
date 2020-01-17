@@ -48,10 +48,10 @@ const LevenshteinDistance = (s, t) => {
 // Here, remove white spaces
 const getString = (obj, option) => {
     if (Array.isArray(obj)) {
-        return JSON.stringify(obj).trim();
+        return JSON.stringify(obj).replace(/ /g, '');
     }
     if (typeof obj !== 'object') {
-        return `${obj}`.trim();
+        return `${obj}`.replace(/ /g, '');
     }
     let newObj = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -60,7 +60,7 @@ const getString = (obj, option) => {
             newObj[key] = value;
         }
     }
-    return JSON.stringify(newObj).trim();
+    return JSON.stringify(newObj).replace(/ /g, '');
 }
 
 // Get string representation of the object in tree-like format
@@ -346,4 +346,24 @@ export const compare = (left, right, option = { baseKeys: ['name'], ignoreKeys: 
         rt.push(`${space.repeat(depth + 1)}${right === undefined ? '' : right + ','}`);
     }
     return { left: lt, right: rt };
+}
+
+export const updateDoses = (obj) => {
+    const findFieldName = (fields, fieldId) => {
+        for (const field of fields) {
+            if (field.id === fieldId) {
+                return field.fieldName;
+            }
+            const fieldName = findFieldName(field.children, fieldId);
+            if (fieldName) {
+                return fieldName
+            }
+        }
+        return null;
+    }
+
+    for (const dose of obj.doses) {
+        dose['fieldName'] = findFieldName(obj.fields, dose.fieldId);
+        dose['doseName'] = dose.fieldName + dose.ageGroup;
+    }
 }
