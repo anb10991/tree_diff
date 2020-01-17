@@ -11,7 +11,7 @@ import {
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer';
 import { styled } from '@material-ui/styles'
 
-import styles from './index.css'
+// import styles from './index.css'
 
 // import { AutoSizer, List } from 'react-virtualized';
 import 'react-virtualized/styles.css'; // only needs to be imported once
@@ -97,9 +97,12 @@ const MyBox = styled(Box)({
 const TreeDiff = (props) => {
   const { past, current, options } = props
 
+  if (options.baseKeyMap) {
+    options.baseKeys = options.baseKeys.map((baseKey) => (options.baseKeyMap[baseKey] ? options.baseKeyMap[baseKey] : baseKey))
+  }
+
   const diffString = compare(past, current, options);
-
-
+  
   const rows = [];
   const newStyles = {
       marker: {
